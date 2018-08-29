@@ -6,15 +6,20 @@ import { Common } from "../../providers/common";
 @Component({ selector: "page-home", templateUrl: "home.html" })
 export class HomePage {
   @ViewChild("updatebox") updatebox;
-  public userDetails: any;
   public resposeData: any;
   public dataSet: any;
   public noRecords: boolean;
-  userPostData = {
-    user_id: "",
-    token: "",
-    feed: "",
-    feed_id: "",
+  reminderData = {
+    id:"",
+    // name:"",
+    // description:"",
+    // createtime:"",
+    // duetime:"",
+    // level:"",
+    // status:"",
+    // patientId:"",
+    // patientName:"",
+    // doctorId:"",
     lastCreated: ""
   };
 
@@ -25,30 +30,36 @@ export class HomePage {
     public app: App,
     public authService: AuthService
   ) {
-    const data = JSON.parse(localStorage.getItem("userData"));
-    this.userDetails = data.userData;
-    this.userPostData.user_id = this.userDetails.user_id;
-    this.userPostData.token = this.userDetails.token;
-    this.userPostData.lastCreated = "";
+    const tmp = JSON.stringify(this.authService.getData());
+    const data = JSON.parse(tmp);
+    this.reminderData.id = data.id;
+    // this.reminderData.name = data.name;
+    // this.reminderData.description = data.description;
+    // this.reminderData.createtime = data.createtime;
+    // this.reminderData.duetime = data.createtime;
+    // this.reminderData.level = data.level;
+    // this.reminderData.status = data.status;
+    // this.reminderData.patientId = data.patientId;
+    // this.reminderData.patientName = data.patientName;
+    // this.reminderData.doctorId = data.doctorId;
+    this.reminderData.lastCreated = "";
     this.noRecords = false
     this.getFeed();
   }
 
   getFeed() {
     this.common.presentLoading();
-    this.authService.postData(this.userPostData, "feed").then(
+    this.authService.getData().subscribe(
       result => {
         this.resposeData = result;
-        if (this.resposeData.feedData) {
+        if (this.resposeData) {
           this.common.closeLoading();
-          this.dataSet = this.resposeData.feedData;
+          this.dataSet = this.resposeData;
           console.log(this.dataSet);
 
-          const dataLength = this.resposeData.feedData.length;
+          const dataLength = this.resposeData.length;
 
-          this.userPostData.lastCreated = this.resposeData.feedData[
-            dataLength - 1
-          ].created;
+          this.reminderData.lastCreated = this.resposeData[dataLength - 1].createtime;
         } else {
           console.log("No access");
         }
@@ -59,37 +70,37 @@ export class HomePage {
     );
   }
 
-  feedUpdate() {
-    if (this.userPostData.feed) {
-      this.common.presentLoading();
-      this.authService.postData(this.userPostData, "feedUpdate").then(
-        result => {
-          this.resposeData = result;
-          if (this.resposeData.feedData) {
-            this.common.closeLoading();
-            this.dataSet.unshift(this.resposeData.feedData);
-            this.userPostData.feed = "";
+  // feedUpdate() {
+  //   if (this.reminderData) {
+  //     this.common.presentLoading();
+  //     this.authService.getData().subscribe(
+  //       result => {
+  //         this.resposeData = result;
+  //         if (this.resposeData) {
+  //           this.common.closeLoading();
+  //           this.dataSet.unshift(this.resposeData);
+  //           this.reminderData.feed = "";
 
-            //this.updatebox.setFocus();
-            setTimeout(() => {
-              //  this.updatebox.focus();
-            }, 150);
-          } else {
-            console.log("No access");
-          }
-        },
-        err => {
-          //Connection failed message
-        }
-      );
-    }
-  }
+  //           //this.updatebox.setFocus();
+  //           setTimeout(() => {
+  //             //  this.updatebox.focus();
+  //           }, 150);
+  //         } else {
+  //           console.log("No access");
+  //         }
+  //       },
+  //       err => {
+  //         //Connection failed message
+  //       }
+  //     );
+  //   }
+  // }
 
-  feedDelete(feed_id, msgIndex) {
-    if (feed_id > 0) {
+  finish(id, msgIndex) {
+    if (id > 0) {
       let alert = this.alertCtrl.create({
-        title: "Delete Feed",
-        message: "Do you want to buy this feed?",
+        title: "Finish Reminder",
+        message: "Did you finish this task?",
         buttons: [
           {
             text: "Cancel",
@@ -99,13 +110,13 @@ export class HomePage {
             }
           },
           {
-            text: "Delete",
+            text: "Yes",
             handler: () => {
-              this.userPostData.feed_id = feed_id;
-              this.authService.postData(this.userPostData, "feedDelete").then(
+              this.reminderData.id = id;
+              this.authService.putData(this.reminderData.id).subscribe(
                 result => {
                   this.resposeData = result;
-                  if (this.resposeData.success) {
+                  if (this.resposeData) {
                     this.dataSet.splice(msgIndex, 1);
                   } else {
                     console.log("No access");
@@ -121,6 +132,7 @@ export class HomePage {
       });
       alert.present();
     }
+    this.getFeed();
   }
 
 
@@ -129,18 +141,20 @@ export class HomePage {
     console.log("Begin async operation");
     return new Promise(resolve => {
       setTimeout(() => {
-        this.authService.postData(this.userPostData, "feed").then(
+        this.authService.getData().subscribe(
           result => {
             this.resposeData = result;
-            if (this.resposeData.feedData.length) {
-              const newData = this.resposeData.feedData;
-              this.userPostData.lastCreated = this.resposeData.feedData[
+            if (this.resposeData.length>this.dataSet.length) {
+              this.noRecords = false;
+              const newData = this.resposeData;
+              this.reminderData.lastCreated = this.resposeData[
                 newData.length - 1
-              ].created;
+              ].createtime;
 
-              for (let i = 0; i < newData.length; i++) {
-                this.dataSet.push(newData[i]);
-              }
+              // for (let i = 0; i < newData.length; i++) {
+              //   this.dataSet.push(newData[i]);
+              // }
+              this.dataSet = newData;
             } else {
               this.noRecords = true;
               console.log("No user updates");
