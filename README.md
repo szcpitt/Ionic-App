@@ -29,7 +29,7 @@ Execute following commands to run this application.
 
 
 ```
-$ git clone https://github.com/srinivastamada/ionic-restful-authentication.git
+$ git clone https://github.com/szcpitt/Ionic-App.git
 $ cd ionic-restful-authentication
 $ npm install
 $ ionic serve
