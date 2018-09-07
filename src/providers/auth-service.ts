@@ -6,7 +6,7 @@ import {TOKEN_AUTH_PASSWORD, TOKEN_AUTH_USERNAME} from './auth.constant';
 @Injectable()
 export class AuthService {
 
-  static rootUrl = 'http://localhost:8080';
+  static rootUrl = 'https://springboot-hospital.herokuapp.com';
 
   constructor(public http: Http) {
     console.log('Hello AuthService Provider');

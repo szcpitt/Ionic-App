@@ -9,14 +9,6 @@
 </ion-header>
 
 <ion-content padding>
-  <!-- <h2>Welcome to {{userDetails.name}}</h2>
-  <ion-item id="udpateBox">
-    <textarea #updatebox [(ngModel)]="reminderData" autofocus></textarea>
-    <ion-row>
-      <button ion-button color="energy" (click)="feedUpdate()">Update</button>
-    </ion-row>
-  </ion-item> -->
-
   <ion-card id='updateDOM'></ion-card>
 
   <ion-card *ngFor="let item of dataSet; let msgIndex = index">
