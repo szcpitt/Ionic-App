@@ -17,6 +17,8 @@
     </ion-row>
   </ion-item> -->
 
+  <ion-card id='updateDOM'></ion-card>
+
   <ion-card *ngFor="let item of dataSet; let msgIndex = index">
     <ion-item>
       <ion-icon name="checkmark" item-right (click)="finish(item.id, msgIndex)"></ion-icon>

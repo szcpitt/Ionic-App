@@ -58,6 +58,9 @@ export class AuthService {
     return this.http.get(url,{headers: headers})
       .map(res => res.json())
       .map((res: any) => {
+        if(res.doctorId != null){
+          localStorage.setItem("doctorId",res.doctorId);
+        }
         if (res.id != null) {
           localStorage.setItem("patientId", res.id);
           return res.id;

@@ -3,14 +3,23 @@ import { NavController, App, AlertController } from "ionic-angular";
 import { AuthService } from "../../providers/auth-service";
 import { Common } from "../../providers/common";
 
+import Stomp from 'stompjs';
+import SockJS from 'sockjs-client';
+
+import $ from 'jquery';
+
 @Component({ selector: "page-home", templateUrl: "home.html" })
 export class HomePage {
   @ViewChild("updatebox") updatebox;
   public resposeData: any;
   public dataSet: any;
   public noRecords: boolean;
-  reminderData = {
-    id:"",
+
+  private serverUrl = 'http://localhost:8080/socket';
+  private stompClient;
+
+  // reminderData = {
+  //   id:"",
     // name:"",
     // description:"",
     // createtime:"",
@@ -20,8 +29,8 @@ export class HomePage {
     // patientId:"",
     // patientName:"",
     // doctorId:"",
-    lastCreated: ""
-  };
+  //   lastCreated: ""
+  // };
 
   constructor(
     public common: Common,
@@ -30,9 +39,9 @@ export class HomePage {
     public app: App,
     public authService: AuthService
   ) {
-    const tmp = JSON.stringify(this.authService.getData());
-    const data = JSON.parse(tmp);
-    this.reminderData.id = data.id;
+    // const tmp = JSON.stringify(this.authService.getData());
+    // const data = JSON.parse(tmp);
+    // this.reminderData.id = data.id;
     // this.reminderData.name = data.name;
     // this.reminderData.description = data.description;
     // this.reminderData.createtime = data.createtime;
@@ -42,9 +51,27 @@ export class HomePage {
     // this.reminderData.patientId = data.patientId;
     // this.reminderData.patientName = data.patientName;
     // this.reminderData.doctorId = data.doctorId;
-    this.reminderData.lastCreated = "";
+    // this.reminderData.lastCreated = "";
     this.noRecords = false
     this.getFeed();
+    this.initializeWebSocketConnection();
+  }
+
+  initializeWebSocketConnection(){
+    let ws = new SockJS(this.serverUrl);
+    this.stompClient = Stomp.over(ws);
+    let that = this;
+    let patientId = localStorage.getItem("patientId");
+    this.stompClient.connect({}, function(frame) {
+      that.stompClient.subscribe("/updateReminder/"+patientId, (message) => {
+        if(message.body) {
+          // if($('#updateDOM').children().length==0){
+            $("#updateDOM").append("<ion-item id='updateData'>"+message.body+"</ion-item>");
+            console.log(message.body);
+          // }
+        }
+      });
+    });
   }
 
   getFeed() {
@@ -59,7 +86,7 @@ export class HomePage {
 
           const dataLength = this.resposeData.length;
 
-          this.reminderData.lastCreated = this.resposeData[dataLength - 1].createtime;
+          // this.reminderData.lastCreated = this.resposeData[dataLength - 1].createtime;
         } else {
           console.log("No access");
         }
@@ -112,8 +139,8 @@ export class HomePage {
           {
             text: "Yes",
             handler: () => {
-              this.reminderData.id = id;
-              this.authService.putData(this.reminderData.id).subscribe(
+              // this.reminderData.id = id;
+              this.authService.putData(id).subscribe(
                 result => {
                   this.resposeData = result;
                   if (this.resposeData) {
@@ -126,6 +153,11 @@ export class HomePage {
                   //Connection failed message
                 }
               );
+              //Socket message
+              let patientId = localStorage.getItem("patientId");
+              let doctorId = localStorage.getItem("doctorId");
+              let message=doctorId+":"+patientId;
+              this.stompClient.send("/app/send/newStatus" , {}, message);
             }
           }
         ]
@@ -147,9 +179,9 @@ export class HomePage {
             if (this.resposeData.length>this.dataSet.length) {
               this.noRecords = false;
               const newData = this.resposeData;
-              this.reminderData.lastCreated = this.resposeData[
-                newData.length - 1
-              ].createtime;
+              // this.reminderData.lastCreated = this.resposeData[
+              //   newData.length - 1
+              // ].createtime;
 
               // for (let i = 0; i < newData.length; i++) {
               //   this.dataSet.push(newData[i]);
